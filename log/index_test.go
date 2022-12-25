@@ -1,12 +1,12 @@
 package log
 
 import (
-	"fmt"
-	"github.com/stretchr/testify/require"
 	"io"
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestIndex(t *testing.T) {
@@ -24,12 +24,12 @@ func TestIndex(t *testing.T) {
 	require.Error(t, err)
 	require.Equal(t, f.Name(), idx.Name())
 
-	entries := []struct{
+	entries := []struct {
 		Off uint32
 		Pos uint64
 	}{
-		{Off:0, Pos: 0},
-		{Off:1, Pos: 10},
+		{Off: 0, Pos: 0},
+		{Off: 1, Pos: 10},
 	}
 
 	for _, want := range entries {
@@ -46,16 +46,12 @@ func TestIndex(t *testing.T) {
 	err = idx.Close()
 	require.NoError(t, err)
 
-	fmt.Println("closed file")
-	fmt.Println("reopening file")
 	f, _ = os.OpenFile(f.Name(), os.O_RDWR, 0600)
 	idx, err = newIndex(f, c)
 	require.NoError(t, err)
 
 	off, pos, err := idx.Read(-1)
 	require.NoError(t, err)
-	fmt.Println(off)
-	fmt.Println(pos)
 	require.Equal(t, uint32(1), off)
 	require.Equal(t, entries[1].Pos, pos)
 }
