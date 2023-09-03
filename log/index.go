@@ -1,7 +1,6 @@
 package log
 
 import (
-	"fmt"
 	"io"
 	"os"
 
@@ -14,18 +13,11 @@ var (
 	entWidth             = offsetWidth + positionWidth
 )
 
+// index defines persisted and memory-mapped file
 type index struct {
 	file *os.File
 	mmap gommap.MMap
 	size uint64
-}
-
-type Config struct {
-	Segment struct {
-		MaxStoreBytes uint64
-		MaxIndexBytes uint64
-		InitialOffset uint64
-	}
 }
 
 func newIndex(f *os.File, c Config) (*index, error) {
@@ -37,6 +29,8 @@ func newIndex(f *os.File, c Config) (*index, error) {
 		return nil, err
 	}
 	idx.size = uint64(fi.Size())
+
+	// pre-emptively grows the file to max index bytes
 	if err := os.Truncate(f.Name(), int64(c.Segment.MaxIndexBytes)); err != nil {
 		return nil, err
 	}
@@ -50,6 +44,9 @@ func newIndex(f *os.File, c Config) (*index, error) {
 	return idx, nil
 }
 
+// Close makes sure the memory-mapped file has synced its data
+// to the persisted file and that the persisted file has
+// flushed its contents to the stable storage.
 func (i *index) Close() error {
 	if err := i.mmap.Sync(gommap.MS_SYNC); err != nil {
 		return err
@@ -59,7 +56,6 @@ func (i *index) Close() error {
 		return err
 	}
 
-	fmt.Println(i.size)
 	if err := i.file.Truncate(int64(i.size)); err != nil {
 		return err
 	}
@@ -72,10 +68,9 @@ func (i *index) Read(in int64) (out uint32, pos uint64, err error) {
 		return 0, 0, io.EOF
 	}
 
+	out = uint32(in)
 	if in == -1 {
-		out = uint32((i.size)/entWidth - 1)
-	} else {
-		out = uint32(in)
+		out = uint32((i.size / entWidth) - 1)
 	}
 
 	pos = uint64(out) * entWidth
