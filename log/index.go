@@ -20,6 +20,8 @@ type index struct {
 	size uint64
 }
 
+// newIndex creates a new index file, persistent file based on
+// the configuration.
 func newIndex(f *os.File, c Config) (*index, error) {
 	idx := &index{
 		file: f,
@@ -56,6 +58,7 @@ func (i *index) Close() error {
 		return err
 	}
 
+	// re-sizes the file to the actual file size
 	if err := i.file.Truncate(int64(i.size)); err != nil {
 		return err
 	}
@@ -63,13 +66,16 @@ func (i *index) Close() error {
 	return i.file.Close()
 }
 
-func (i *index) Read(in int64) (out uint32, pos uint64, err error) {
+// Read takes in an offset and returns the associated record's position
+// in the store.
+// O is always the offset of the index's first entry.
+func (i *index) Read(offset int64) (out uint32, pos uint64, err error) {
 	if i.size == 0 {
 		return 0, 0, io.EOF
 	}
 
-	out = uint32(in)
-	if in == -1 {
+	out = uint32(offset)
+	if offset == -1 {
 		out = uint32((i.size / entWidth) - 1)
 	}
 
@@ -83,14 +89,15 @@ func (i *index) Read(in int64) (out uint32, pos uint64, err error) {
 	return out, pos, nil
 }
 
-func (i *index) Write(off uint32, pos uint64) error {
+// Write appends the given offset and position to the index.
+func (i *index) Write(offset uint32, pos uint64) error {
 	if uint64(len(i.mmap)) < i.size+entWidth {
 		return io.EOF
 	}
 
-	enc.PutUint32(i.mmap[i.size:i.size+offsetWidth], off)
+	enc.PutUint32(i.mmap[i.size:i.size+offsetWidth], offset)
 	enc.PutUint64(i.mmap[i.size+offsetWidth:i.size+entWidth], pos)
-	i.size += uint64(entWidth)
+	i.size += entWidth
 	return nil
 }
 
