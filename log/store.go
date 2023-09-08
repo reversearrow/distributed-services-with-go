@@ -3,6 +3,7 @@ package log
 import (
 	"bufio"
 	"encoding/binary"
+	"fmt"
 	"os"
 	"sync"
 )
@@ -49,14 +50,17 @@ func (s *store) Append(p []byte) (uint64, uint64, error) {
 		return 0, 0, err
 	}
 
+	fmt.Println("len p", len(p))
 	w, err := s.buf.Write(p)
 	if err != nil {
 		return 0, 0, err
 	}
 
 	w += binaryLengthWidth
+	fmt.Println("w", w)
 	s.size += uint64(w)
 
+	fmt.Println("size", s.size)
 	// returns number of bytes written, pos and error
 	return uint64(w), s.size, nil
 }
