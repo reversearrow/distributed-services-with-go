@@ -12,6 +12,11 @@ import (
 	"sync"
 )
 
+const (
+	defaultMaxSegmentBytes = 1024
+	defaultMaxIndexBytes   = 1024
+)
+
 type Log struct {
 	mu sync.RWMutex
 
@@ -24,11 +29,11 @@ type Log struct {
 
 func NewLog(dir string, c Config) (*Log, error) {
 	if c.Segment.MaxIndexBytes == 0 {
-		c.Segment.MaxStoreBytes = 1024
+		c.Segment.MaxStoreBytes = defaultMaxSegmentBytes
 	}
 
 	if c.Segment.MaxIndexBytes == 0 {
-		c.Segment.MaxIndexBytes = 1024
+		c.Segment.MaxIndexBytes = defaultMaxIndexBytes
 	}
 
 	l := &Log{
@@ -180,7 +185,7 @@ func (l *Log) Truncate(lowest uint64) error {
 
 func (l *Log) Reader() io.Reader {
 	l.mu.RLock()
-	defer l.mu.Unlock()
+	defer l.mu.RUnlock()
 	readers := make([]io.Reader, len(l.segments))
 	for i, segment := range l.segments {
 		readers[i] = &originReader{segment.store, 0}
