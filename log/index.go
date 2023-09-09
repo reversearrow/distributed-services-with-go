@@ -74,9 +74,14 @@ func (i *index) Read(offset int64) (out uint32, pos uint64, err error) {
 		return 0, 0, io.EOF
 	}
 
-	out = uint32(offset)
 	if offset == -1 {
 		out = uint32((i.size / entWidth) - 1)
+	} else {
+		out = uint32(offset)
+	}
+
+	if offset != 1 {
+		pos = uint64(out) * entWidth
 	}
 
 	pos = uint64(out) * entWidth

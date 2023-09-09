@@ -3,6 +3,7 @@ package log
 import (
 	"bufio"
 	"encoding/binary"
+	"fmt"
 	"os"
 	"sync"
 )
@@ -44,6 +45,7 @@ func (s *store) Append(p []byte) (uint64, uint64, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
+	pos := s.size
 	// this writes the size of the data in binary
 	if err := binary.Write(s.buf, enc, uint64(len(p))); err != nil {
 		return 0, 0, err
@@ -58,7 +60,7 @@ func (s *store) Append(p []byte) (uint64, uint64, error) {
 	s.size += uint64(w)
 
 	// returns number of bytes written, pos and error
-	return uint64(w), s.size, nil
+	return uint64(w), pos, nil
 }
 
 func (s *store) Read(pos uint64) ([]byte, error) {
@@ -67,9 +69,10 @@ func (s *store) Read(pos uint64) ([]byte, error) {
 	if err := s.buf.Flush(); err != nil {
 		return nil, err
 	}
+
 	size := make([]byte, binaryLengthWidth)
 	if _, err := s.File.ReadAt(size, int64(pos)); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("reading file error: %w", err)
 	}
 
 	b := make([]byte, enc.Uint64(size))
