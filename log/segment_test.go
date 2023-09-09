@@ -3,6 +3,7 @@ package log
 import (
 	log_v1 "github.com/reversearrow/distributed-computing-in-go/api/v1"
 	"github.com/stretchr/testify/require"
+	"io"
 	"os"
 	"testing"
 )
@@ -37,4 +38,6 @@ func TestSegment(t *testing.T) {
 		require.Equal(t, want.Value, got.Value)
 	}
 
+	_, err = s.Append(want)
+	require.Equal(t, io.EOF, err)
 }

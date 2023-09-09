@@ -94,7 +94,7 @@ func (s *segment) Append(record *log_v1.Record) (offset uint64, err error) {
 		uint32(s.nextOffset-s.baseOffset),
 		pos,
 	); err != nil {
-		return 0, nil
+		return 0, err
 	}
 
 	s.nextOffset++
