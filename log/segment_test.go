@@ -1,7 +1,6 @@
 package log
 
 import (
-	"fmt"
 	log_v1 "github.com/reversearrow/distributed-computing-in-go/api/v1"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -11,12 +10,12 @@ import (
 func TestSegment(t *testing.T) {
 	dir, err := os.MkdirTemp("", "")
 	require.NoError(t, err)
-	//defer func(path string) {
-	//	err := os.RemoveAll(path)
-	//	if err != nil {
-	//		t.Log("error removing temp directory")
-	//	}
-	//}(dir)
+	defer func(path string) {
+		err := os.RemoveAll(path)
+		if err != nil {
+			t.Log("error removing temp directory")
+		}
+	}(dir)
 
 	want := &log_v1.Record{Value: []byte("hello world")}
 
@@ -29,15 +28,13 @@ func TestSegment(t *testing.T) {
 	require.Equal(t, uint64(16), s.nextOffset, s.baseOffset)
 	require.False(t, s.IsMaxed())
 
-	for i := uint64(0); i < 1; i++ {
+	for i := uint64(0); i < 3; i++ {
 		off, err := s.Append(want)
 		require.NoError(t, err)
-		fmt.Println(off)
 
 		got, err := s.Read(off)
 		require.NoError(t, err)
-		fmt.Println("got", got)
-		//require.Equal(t, want.Value, got.Value)
+		require.Equal(t, want.Value, got.Value)
 	}
 
 }

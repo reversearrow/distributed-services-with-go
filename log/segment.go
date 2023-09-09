@@ -37,7 +37,6 @@ func newSegment(dir string, baseOffset uint64, c Config) (*segment, error) {
 		return nil, fmt.Errorf("error opening directory %s: %w", dir, err)
 	}
 
-	fmt.Println(dir)
 	storeFile, err := os.OpenFile(
 		path.Join(dir, fmt.Sprintf("%d%s", baseOffset, ".store")),
 		os.O_CREATE|os.O_RDWR|os.O_APPEND,
@@ -81,19 +80,16 @@ func newSegment(dir string, baseOffset uint64, c Config) (*segment, error) {
 // records' offset.
 func (s *segment) Append(record *log_v1.Record) (offset uint64, err error) {
 	record.Offset = s.nextOffset
-
 	p, err := proto.Marshal(record)
 	if err != nil {
 		return 0, fmt.Errorf("error marshalling record: %w", err)
 	}
 
-	fmt.Println("attempting to append to store")
 	_, pos, err := s.store.Append(p)
 	if err != nil {
 		return 0, err
 	}
 
-	fmt.Println("attempting to append to index")
 	if err := s.index.Write(
 		uint32(s.nextOffset-s.baseOffset),
 		pos,
@@ -101,15 +97,12 @@ func (s *segment) Append(record *log_v1.Record) (offset uint64, err error) {
 		return 0, nil
 	}
 
-	fmt.Println("things are appended")
 	s.nextOffset++
-	return s.nextOffset, nil
+	return record.Offset, nil
 }
 
 // Read returns record for the given offset.
 func (s *segment) Read(off uint64) (*log_v1.Record, error) {
-	fmt.Println("offset from read", off)
-	fmt.Println("offset 2", int64(off-s.baseOffset))
 	_, pos, err := s.index.Read(int64(off - s.baseOffset))
 	if err != nil {
 		return nil, fmt.Errorf("attmpeting to read value at the pos: %v : %w", pos, err)
@@ -117,7 +110,7 @@ func (s *segment) Read(off uint64) (*log_v1.Record, error) {
 
 	p, err := s.store.Read(pos)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("attempting to read from the store at pos: %v: %w", pos, err)
 	}
 	record := &log_v1.Record{}
 	if err := proto.Unmarshal(p, record); err != nil {

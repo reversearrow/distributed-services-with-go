@@ -1,7 +1,6 @@
 package log
 
 import (
-	"fmt"
 	"io"
 	"os"
 
@@ -71,8 +70,6 @@ func (i *index) Close() error {
 // in the store.
 // O is always the offset of the index's first entry.
 func (i *index) Read(offset int64) (out uint32, pos uint64, err error) {
-	fmt.Println("offset is ", offset)
-	fmt.Println("isize is from read", i.size)
 	if i.size == 0 {
 		return 0, 0, io.EOF
 	}
@@ -87,10 +84,8 @@ func (i *index) Read(offset int64) (out uint32, pos uint64, err error) {
 		pos = uint64(out) * entWidth
 	}
 
-	fmt.Println("pos", pos)
-	fmt.Println("pos + entWidth", pos+entWidth)
+	pos = uint64(out) * entWidth
 	if i.size < pos+entWidth {
-		fmt.Println("I am returning io.Eof")
 		return 0, 0, io.EOF
 	}
 
@@ -108,8 +103,6 @@ func (i *index) Write(offset uint32, pos uint64) error {
 	enc.PutUint32(i.mmap[i.size:i.size+offsetWidth], offset)
 	enc.PutUint64(i.mmap[i.size+offsetWidth:i.size+entWidth], pos)
 	i.size += entWidth
-	fmt.Println("isz", i.size)
-	fmt.Println(i.mmap)
 	return nil
 }
 
