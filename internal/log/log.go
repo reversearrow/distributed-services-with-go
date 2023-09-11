@@ -1,7 +1,6 @@
 package log
 
 import (
-	"fmt"
 	log_v1 "github.com/reversearrow/distributed-computing-in-go/api/v1"
 	"io"
 	"os"
@@ -16,6 +15,13 @@ const (
 	defaultMaxSegmentBytes = 1024
 	defaultMaxIndexBytes   = 1024
 )
+
+type ErrOffSetOutOfRange struct {
+}
+
+func (e ErrOffSetOutOfRange) Error() string {
+	return ""
+}
 
 type Log struct {
 	mu sync.RWMutex
@@ -112,7 +118,7 @@ func (l *Log) Read(off uint64) (*log_v1.Record, error) {
 	}
 
 	if s == nil || s.nextOffset <= off {
-		return nil, fmt.Errorf("offset out of range: %d", off)
+		return nil, ErrOffSetOutOfRange{}
 	}
 	return s.Read(off)
 }

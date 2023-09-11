@@ -27,7 +27,7 @@ message ConsumeResponse {
 
 service Log {
   rpc Produce(ProduceRequest) returns (ProduceResponse) {}
-  rpc ProduceStream(ProduceRequest) returns (ProduceResponse) {}
+  rpc ProduceStream(stream ProduceRequest) returns (stream ProduceResponse) {}
   rpc Consume(ConsumeRequest) returns (ConsumeResponse) {}
-  rpc ConsumeStream(ConsumeRequest) returns (ConsumeResponse) {}
+  rpc ConsumeStream(ConsumeRequest) returns (stream ConsumeResponse) {}
 }
